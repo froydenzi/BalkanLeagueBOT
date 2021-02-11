@@ -1,0 +1,38 @@
+plugins {
+    id 'java'
+}
+
+group 'gg.deepfear'
+version '2.0'
+
+sourceCompatibility = 1.8
+
+repositories {
+    jcenter()
+}
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Main-Class': 'Main'
+    }
+    from {
+        configurations.compile.findAll { !it.name.endsWith('pom') }.collect { it.isDirectory() ? it : zipTree(it) }
+        configurations.runtimeClasspath.findAll { !it.name.endsWith('pom') }.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+    with jar
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    compile group: 'net.dv8tion', name: 'JDA', version: '4.2.0_227'
+    compile group: 'org.json', name: 'json', version: '20201115'
+    compile group: 'org.slf4j', name: 'slf4j-log4j12', version: '1.7.25'
+    compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.40'
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.12'
+    compile group: 'org.apache.httpcomponents', name: 'httpcore', version: '4.4.14'
+}
+
+test {
+    useJUnitPlatform()
+}
