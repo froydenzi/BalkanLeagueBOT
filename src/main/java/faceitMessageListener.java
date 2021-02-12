@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class faceitMessageListener extends ListenerAdapter implements EventListener {
@@ -21,6 +22,8 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
     public static Guild guild;
     public static Runnable rnbl;
     public static Thread thread;
+    SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss ");
+    Date date = new Date();
 
 
     @Override
@@ -43,7 +46,7 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
                 EmbedBuilder authmsg2 = new EmbedBuilder();
                 authmsg2.setColor(0x08d5da);
                 if (databaseAdapter.discordRes.equals("yes") && faceitID == null) {
-                    System.out.println("[MATCH THREAD] " + usr.getEffectiveName() + " Nije kompletno registrovan... move");
+                    System.out.println(formatter.format(date) + "[MATCH LOGIC] " + usr.getEffectiveName() + " Nije kompletno registrovan... move");
                     PrivateChannel chapriv = Objects.requireNonNull(usr.getUser().openPrivateChannel().complete());
                     authmsg2.setAuthor("REGISTRATION SITE - CLICK HERE", "https://www.balkan-csgo.com/")
                             .addField("Status registracije:", "Nepotpuna registracija,provjerite jeste li registrovali ispravan faceit profil sa ispravnim discord profilom! :thinking:", true);
@@ -53,13 +56,13 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
                     authmsg2.setAuthor("BALKAN CSGO LEAGUE", "https://www.balkan-csgo.com/")
                             .addField("Nemate startan match!", "Ako se match trenutno konfigurise,probajte kasnije! :face_with_monocle:", true)
                             .addField("\nMoguci problem:", "Provjerite jeste li registrovali ispravan faceit profil sa ispravnim discord profilom! :v:", true);
-                    System.out.println("[MATCH LOGIC] " + usr.getEffectiveName() + " Nema startan match... kick");
+                    System.out.println(formatter.format(date) + "[MATCH LOGIC] " + usr.getEffectiveName() + " Nema startan match... kick");
                     PrivateChannel chapriv = Objects.requireNonNull(usr.getUser().openPrivateChannel().complete());
                     chapriv.sendMessage(authmsg2.build()).queue();
                     guild.moveVoiceMember(usr, guild.getVoiceChannelById(movetocha)).complete();
 
                 } else if (databaseAdapter.discordRes.equals("no")) {
-                    System.out.println("[MATCH THREAD] " + usr.getEffectiveName() + " Nije registrovan... move");
+                    System.out.println(formatter.format(date) + "[MATCH LOGIC] " + usr.getEffectiveName() + " Nije registrovan... move");
                     PrivateChannel chapriv = Objects.requireNonNull(usr.getUser().openPrivateChannel().complete());
                     authmsg2.setAuthor("REGISTRATION SITE - CLICK HERE", "https://www.balkan-csgo.com/")
                             .addField("Status registracije:", "Niste registrovani na nas website, za registraciju posjetite link iznad! :thinking:", true)
@@ -73,6 +76,7 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
         super.onGuildVoiceUpdate(event);
     }
 
+    @Override
     public void onMessageReceived(MessageReceivedEvent event) {
         if (event.getAuthor().isBot() && !event.getAuthor().getName().equals(webhookname)) {
             return;
@@ -84,7 +88,7 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
         if (cmessage[0].equalsIgnoreCase(setPrefix + "matchid")) {
             if (cmessage.length == 3) {
 
-                System.out.println("[BOT Listener] Dobio sam poziv !matchid " + cmessage[1] + " sa komandom " + cmessage[2]);
+                System.out.println(formatter.format(date) + "[BOT Listener] Dobio sam poziv !matchid " + cmessage[1] + " sa komandom " + cmessage[2]);
 
                 if (cmessage[2].equals("match_status_ready")) {
 
@@ -120,7 +124,8 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
 
 
                     } else {
-                        System.out.println("[THREAD STARTER] Match " + cmessage[1] + " je vec startan!");
+                        System.out.println(formatter.format(date) + "[THREAD STARTER] Match " + cmessage[1] + " je vec startan!");
+                        event.getChannel().sendMessage("[THREAD STARTER] Match already started. Thread name: " + thread.getName()).queue();
                         started.clear();
                     }
 
@@ -131,7 +136,7 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
                     for (Thread t : threads) {
                         if (t.getName().equals(cmessage[1] + "---check")) {
                             event.getChannel().sendMessage("[THREAD STARTER] Match ended. Thread name: " + t.getName()).queue();
-                            System.out.println("[Thread] Match zavrsen,gasim thread sa imenom: " + t.getName());
+                            System.out.println(formatter.format(date) + "[Thread] Match zavrsen,gasim thread sa imenom: " + t.getName());
                             t.interrupt();
                         }
                     }
@@ -150,8 +155,13 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
                     String[] nameSplit = name1.split("---");
 
                     if (nameSplit.length == 2 && nameSplit[1].equals("check")) {
-                        event.getChannel().sendMessage("[THREAD STARTER] Match stopped. Thread name: " + t.getName()).queue();
+                        event.getChannel().sendMessage("[THREAD STARTER] Match stopped. Thread name: " + t.getName()).complete();
                         t.interrupt();
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
             }
@@ -197,7 +207,7 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
 
                 if (cha.equals(auth)) {
 
-                    System.out.println("[AUTH] " + event.getAuthor() + " discord id: " + event.getAuthor().getId());
+                    System.out.println(formatter.format(date) + "[AUTH] " + event.getAuthor() + " discord id: " + event.getAuthor().getId());
                     databaseAdapter.discordId = event.getAuthor().getId();
 
                     try {
@@ -205,7 +215,7 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
                     } catch (SQLException throwables) {
                         throwables.printStackTrace();
                     }
-                    System.out.println("[AUTH] " + event.getAuthor() + " have discord id set: " + databaseAdapter.discordRes);
+                    System.out.println(formatter.format(date) + "[AUTH] " + event.getAuthor() + " have discord id set: " + databaseAdapter.discordRes);
                     EmbedBuilder botmsg = new EmbedBuilder();
                     botmsg.setColor(0x08d5da);
                     if (databaseAdapter.discordRes.equals("no")) {

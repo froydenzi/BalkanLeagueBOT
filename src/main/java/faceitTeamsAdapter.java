@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.Vector;
 
 
-public class faceitTeamsAdapter {
+public class faceitTeamsAdapter{
     public static ArrayList<String> teams = new ArrayList<>();
     public static Vector<String> teamOne = new Vector<>();
     public static Vector<String> teamTwo = new Vector<>();
@@ -23,7 +23,6 @@ public class faceitTeamsAdapter {
 
 
     public static void main(String[] name) {
-        System.out.println("[FACEIT] Dobio sam ovaj poziv " + MATCH_ID);
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
