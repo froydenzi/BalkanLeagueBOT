@@ -3,8 +3,6 @@ import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Vector;
@@ -34,17 +32,17 @@ public class threadMatch extends faceitMessageListener implements Runnable {
         Guild guildThread = guild;
         VoiceChannel conn = guildThread.getVoiceChannelById(moveme);
         final String[] channelid = new String[2];
-        System.out.println(formatter.format(date) + "[MATCH THREAD] Starting thread with name: " + Thread.currentThread().getName());
+        System.out.println(printTimeStamp() + "[MATCH THREAD] Starting thread with name: " + Thread.currentThread().getName());
 
         Objects.requireNonNull(guildThread.getCategoryById(hubcategory)).createVoiceChannel(channelOne)
                 .queue(channel -> {
                     channelid[0] = channel.getId();
-                    System.out.println(formatter.format(date) + "[MATCH THREAD IDS] Channel one created - id: " + channelid[0]);
+                    System.out.println(printTimeStamp() + "[MATCH THREAD IDS] Channel one created - id: " + channelid[0]);
                 });
         Objects.requireNonNull(guildThread.getCategoryById(hubcategory)).createVoiceChannel(channelTwo)
                 .queue(channel -> {
                     channelid[1] = channel.getId();
-                    System.out.println(formatter.format(date) + "[MATCH THREAD IDS] Channel two created - id: " + channelid[1]);
+                    System.out.println(printTimeStamp() + "[MATCH THREAD IDS] Channel two created - id: " + channelid[1]);
                     bool = false;
                 });
         try {
@@ -56,10 +54,10 @@ public class threadMatch extends faceitMessageListener implements Runnable {
         final String[] teamOne = team_One.toArray(new String[0]);
         final String[] teamTwo = team_Two.toArray(new String[0]);
 
-        System.out.println(formatter.format(date) + "[MATCH THREAD] Channel one: " + Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[0])).getName()
+        System.out.println(printTimeStamp() + "[MATCH THREAD] Channel one: " + Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[0])).getName()
                 + " channel two: " + Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[1])).getName());
-        System.out.println(formatter.format(date) + "Team one: " + team_One.toString());
-        System.out.println(formatter.format(date) + "Team two: " + team_Two.toString());
+        System.out.println(printTimeStamp() + "Team one: " + team_One.toString());
+        System.out.println(printTimeStamp() + "Team two: " + team_Two.toString());
 
         running.set(true);
 
@@ -88,7 +86,7 @@ public class threadMatch extends faceitMessageListener implements Runnable {
                                 for (String o : teamOne) {
                                     if (faceitID.equals(o)) {
                                         if (Objects.requireNonNull(usr.getVoiceState()).inVoiceChannel()) {
-                                            System.out.println(formatter.format(date) + "[MATCH THREAD] Player " + usr.getEffectiveName() + " with " + faceitID + " faceit id, moved into "
+                                            System.out.println(printTimeStamp() + "[MATCH THREAD] Player " + usr.getEffectiveName() + " with " + faceitID + " faceit id, moved into "
                                                     + Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[0])).getName());
                                             guildThread.moveVoiceMember(usr, guildThread.getVoiceChannelById(channelid[0])).queue();
                                         }
@@ -97,7 +95,7 @@ public class threadMatch extends faceitMessageListener implements Runnable {
                                 for (String t : teamTwo) {
                                     if (faceitID.equals(t)) {
                                         if (Objects.requireNonNull(usr.getVoiceState()).inVoiceChannel()) {
-                                            System.out.println(formatter.format(date) + "[MATCH THREAD] Player " + usr.getEffectiveName() + " with " + faceitID + " faceit id, moved into "
+                                            System.out.println(printTimeStamp() + "[MATCH THREAD] Player " + usr.getEffectiveName() + " with " + faceitID + " faceit id, moved into "
                                                     + Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[1])).getName());
                                             guildThread.moveVoiceMember(usr, guildThread.getVoiceChannelById(channelid[1])).queue();
                                         }
@@ -112,16 +110,16 @@ public class threadMatch extends faceitMessageListener implements Runnable {
                 }
             } catch (InterruptedException e) {
                 if (Thread.currentThread().isInterrupted()) {
-                    System.out.println(formatter.format(date) + "[THREAD STARTER] Match " + Thread.currentThread().getName() + " je vec ugasen!");
+                    System.out.println(printTimeStamp() + "[THREAD STARTER] Match " + Thread.currentThread().getName() + " je vec ugasen!");
                     return;
                 }
-                System.out.println(formatter.format(date) + "[MATCH THREAD] Deleting channel one: " + Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[0])).getName());
-                Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[0])).delete().reason("Match ended.").complete();
-                System.out.println(formatter.format(date) + "[MATCH THREAD] Deleting channel two: " + Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[1])).getName());
-                Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[1])).delete().reason("Match ended.").complete();
-                Thread.currentThread().interrupt();
                 running.set(false);
+                Thread.currentThread().interrupt();
             }
         }
+        Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[0])).delete().reason("Match ended.").complete();
+        System.out.println(printTimeStamp() + "[MATCH THREAD] Deleting channel one: " + Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[0])).getName());
+        Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[1])).delete().reason("Match ended.").complete();
+        System.out.println(printTimeStamp() + "[MATCH THREAD] Deleting channel two: " + Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[1])).getName());
     }
 }

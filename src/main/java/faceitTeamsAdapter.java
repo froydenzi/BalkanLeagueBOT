@@ -21,8 +21,7 @@ public class faceitTeamsAdapter{
         MATCH_ID = matchid;
     }
 
-
-    public static void main(String[] name) {
+    public void getData() {
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()

@@ -15,7 +15,6 @@ public class databaseAdapter {
     public static String discordRes;
 
     private Connection createConnection() {
-        String DB_NAME = "csgobalkanhub";
         try {
             MysqlConnectionPoolDataSource dataSource = new MysqlConnectionPoolDataSource();
             dataSource.setUser(DB_USER);
@@ -35,16 +34,16 @@ public class databaseAdapter {
 
     public void authSQL() throws SQLException {
         faceitId = null;
-        discordRes = "no";
         Statement s = Objects.requireNonNull(createConnection()).createStatement();
         String sql = "SELECT * FROM Korisnici WHERE discord_id='" + discordId + "'";
         ResultSet rec = s.executeQuery(sql);
-        while ((rec != null) && (rec.next())) {
+        if(rec.next()){
             if (rec.getString("discord_id").equals(discordId)) {
                 discordRes = "yes";
                 faceitId = rec.getString("faceit_playerid");
                 haveMatch = rec.getString("Game");
             }
-        }
+        }else
+            discordRes = "no";
     }
 }

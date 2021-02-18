@@ -25,15 +25,16 @@ public class settingConfig {
             faceitMessageListener.setPrefix = prop.getProperty("prefix");
             databaseAdapter.DB_PASSWORD = prop.getProperty("databasePassword");
             databaseAdapter.DB_ADRES = prop.getProperty("server");
-            databaseAdapter.DB_NAME = prop.getProperty("databaseUser");
+            databaseAdapter.DB_NAME = prop.getProperty("databaseName");
             databaseAdapter.DB_PORT = Integer.parseInt(prop.getProperty("port"));
-            databaseAdapter.DB_USER = prop.getProperty("databaseName");
+            databaseAdapter.DB_USER = prop.getProperty("databaseUser");
             faceitMessageListener.moveme = prop.getProperty("movechannel");
             faceitMessageListener.movetocha = prop.getProperty("movetolobby");
             faceitMessageListener.auth = prop.getProperty("authchannel");
             faceitMessageListener.webhookname = prop.getProperty("webhookname");
             faceitMessageListener.hubcategory = prop.getProperty("hubcategory");
             faceitMessageListener.hubrole = prop.getProperty("hubrole");
+            faceitMessageListener.langcha = prop.getProperty("langchannel");
 
         } catch (Exception e) {
             System.out.println("Exception: " + e);
