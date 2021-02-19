@@ -73,8 +73,7 @@ public class threadMatch extends faceitMessageListener implements Runnable {
                         databaseAdapter.discordId = member;
                         String faceitID;
                         String haveMatch;
-                        databaseAdapter dba = new databaseAdapter();
-                        dba.authSQL();
+                        new databaseLang().authSQL();
                         faceitID = databaseAdapter.faceitId;
                         assert usr != null;
 

@@ -14,7 +14,7 @@ public class databaseAdapter {
     public static String haveMatch;
     public static String discordRes;
 
-    private Connection createConnection() {
+    public Connection createConnection() {
         try {
             MysqlConnectionPoolDataSource dataSource = new MysqlConnectionPoolDataSource();
             dataSource.setUser(DB_USER);
@@ -30,20 +30,5 @@ public class databaseAdapter {
             System.out.println("Can't connect to the database! Make sure the database settings are correct and the database server is running AND the database `" + DB_NAME + "` exists");
         }
         return null;
-    }
-
-    public void authSQL() throws SQLException {
-        faceitId = null;
-        Statement s = Objects.requireNonNull(createConnection()).createStatement();
-        String sql = "SELECT * FROM Korisnici WHERE discord_id='" + discordId + "'";
-        ResultSet rec = s.executeQuery(sql);
-        if(rec.next()){
-            if (rec.getString("discord_id").equals(discordId)) {
-                discordRes = "yes";
-                faceitId = rec.getString("faceit_playerid");
-                haveMatch = rec.getString("Game");
-            }
-        }else
-            discordRes = "no";
     }
 }

@@ -31,10 +31,6 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
     public final String[] nasLang = {"U+1f1e7U+1f1e6", "U+1f1f7U+1f1f8", "U+1f1f2U+1f1f0", "U+1f1edU+1f1f7", "U+1f1f2U+1f1ea"};
     public final String[] engLang = {"U+1f1f8U+1f1ee", "U+1f1e6U+1f1f1", "U+1f1fdU+1f1f0", "U+1f1e7U+1f1ec", "U+1f1f7U+1f1f4", "U+1f1faU+1f1f8"};
 
-
-    // TODO: Dodati funkciju za citanje postavljenog jezika
-
-
     public static String printTimeStamp() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss ")
                 .withResolverStyle(ResolverStyle.STRICT);
@@ -48,12 +44,12 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
         TextChannel cha = guild.getTextChannelById(langcha);
         assert cha != null;
         boolean mssg = cha.hasLatestMessage();
-        if (!mssg){
+        if (!mssg) {
             cha.sendMessage("Language selection:").queue(message -> {
-                for (String s: nasLang) {
+                for (String s : nasLang) {
                     message.addReaction(s).queue();
                 }
-                for (String s: engLang) {
+                for (String s : engLang) {
                     message.addReaction(s).queue();
                 }
             });
@@ -69,24 +65,35 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
 
         guild = event.getReaction().getGuild();
         String channel = event.getChannel().getId();
-        if (channel.equals(langcha)){
+        if (channel.equals(langcha)) {
             MessageReaction reaction = event.getReaction();
             String emote = reaction.getReactionEmote().getAsCodepoints();
             String nickname = Objects.requireNonNull(event.getMember()).getEffectiveName();
             String disId = event.getUserId();
-            // TODO: Dodati EmbedBuilder za mjenjanje jezika
+            databaseLang dbl = new databaseLang();
+
+            EmbedBuilder rccmsg = new EmbedBuilder();
+            rccmsg.setColor(0x08d5da)
+                    .setAuthor("BALKAN CSGO LEAGUE", "https://www.balkan-csgo.com/");
+            PrivateChannel chapriv = Objects.requireNonNull(event.getMember().getUser().openPrivateChannel().complete());
+
             if (Arrays.toString(nasLang).contains(emote)) {
                 try {
-                    new databaseAdapterReaction().writeLang(disId, "ba", nickname);
+                    dbl.writeLang(disId, "ba", nickname);
                 } catch (SQLException throwables) {
                     throwables.printStackTrace();
                 }
+                rccmsg.addField("Status registracije jezika:", "Uspjesno ste promjenili Vas jezik na "+reaction.getReactionEmote().getEmoji()+"! :flag_white:", true);
+                chapriv.sendMessage(rccmsg.build()).queue();
+
             } else if (Arrays.toString(engLang).contains(emote)) {
                 try {
-                    new databaseAdapterReaction().writeLang(disId, "en", nickname);
+                    dbl.writeLang(disId, "en", nickname);
                 } catch (SQLException throwables) {
                     throwables.printStackTrace();
                 }
+                rccmsg.addField("Language registration status:", "You have updated your language to "+reaction.getReactionEmote().getEmoji()+"! :flag_white:", true);
+                chapriv.sendMessage(rccmsg.build()).queue();
             }
 
         }
@@ -101,13 +108,16 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
 
         if (Objects.equals(cha, guild.getVoiceChannelById(moveme))) {
             databaseAdapter.discordId = usr.getId();
-            databaseAdapter dba = new databaseAdapter();
+
             try {
-                dba.authSQL();
+                new databaseLang().authSQL();
+                new databaseLang().readLang(usr.getId(), usr.getEffectiveName());
             } catch (SQLException throwables) {
                 throwables.printStackTrace();
             }
+
             String faceitID = databaseAdapter.faceitId;
+            String discordLang = databaseLang.userLang;
 
             if (Objects.requireNonNull(usr.getVoiceState()).inVoiceChannel()) {
                 EmbedBuilder authmsg2 = new EmbedBuilder();
@@ -115,14 +125,22 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
                 if (databaseAdapter.discordRes.equals("yes") && faceitID == null) {
                     System.out.println(printTimeStamp() + "[MATCH LOGIC] " + usr.getEffectiveName() + " Nije kompletno registrovan... move");
                     PrivateChannel chapriv = Objects.requireNonNull(usr.getUser().openPrivateChannel().complete());
-                    authmsg2.setAuthor("REGISTRATION SITE - CLICK HERE", "https://www.balkan-csgo.com/")
-                            .addField("Status registracije:", "Nepotpuna registracija,provjerite jeste li registrovali ispravan faceit profil sa ispravnim discord profilom! :thinking:", true);
+                    authmsg2.setAuthor("REGISTRATION SITE - CLICK HERE", "https://www.balkan-csgo.com/");
+                    if (discordLang.equals("ba"))
+                        authmsg2.addField("Status registracije:", "Nepotpuna registracija,provjerite jeste li registrovali ispravan faceit profil sa ispravnim discord profilom! :thinking:", true);
+                    else
+                        authmsg2.addField("Registration status:", "Incomplete registration,check if you connected right discord profile with right faceit account! :thinking:", true);
                     chapriv.sendMessage(authmsg2.build()).queue();
                     guild.moveVoiceMember(usr, guild.getVoiceChannelById(movetocha)).complete();
                 } else if (databaseAdapter.discordRes.equals("yes") && databaseAdapter.haveMatch.equals("0")) {
-                    authmsg2.setAuthor("BALKAN CSGO LEAGUE", "https://www.balkan-csgo.com/")
-                            .addField("Nemate startan match!", "Ako se match trenutno konfigurise,probajte kasnije! :face_with_monocle:", true)
-                            .addField("\nMoguci problem:", "Provjerite jeste li registrovali ispravan faceit profil sa ispravnim discord profilom! :v:", true);
+                    authmsg2.setAuthor("BALKAN CSGO LEAGUE", "https://www.balkan-csgo.com/");
+                    if (discordLang.equals("ba")) {
+                        authmsg2.addField("Nemate startan match!", "Ako se match trenutno konfigurise,probajte kasnije! :face_with_monocle:", true)
+                                .addField("\nMoguci problem:", "Provjerite jeste li registrovali ispravan faceit profil sa ispravnim discord profilom! :v:", true);
+                    } else {
+                        authmsg2.addField("You don't have started match!", "If match is in configuring state,try later! :face_with_monocle:", true)
+                                .addField("\nPossible problem:", "Check if you connected right discord profile with right faceit account! :v:", true);
+                    }
                     System.out.println(printTimeStamp() + "[MATCH LOGIC] " + usr.getEffectiveName() + " Nema startan match... kick");
                     PrivateChannel chapriv = Objects.requireNonNull(usr.getUser().openPrivateChannel().complete());
                     chapriv.sendMessage(authmsg2.build()).queue();
@@ -131,9 +149,14 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
                 } else if (databaseAdapter.discordRes.equals("no")) {
                     System.out.println(printTimeStamp() + "[MATCH LOGIC] " + usr.getEffectiveName() + " Nije registrovan... move");
                     PrivateChannel chapriv = Objects.requireNonNull(usr.getUser().openPrivateChannel().complete());
-                    authmsg2.setAuthor("REGISTRATION SITE - CLICK HERE", "https://www.balkan-csgo.com/")
-                            .addField("Status registracije:", "Niste registrovani na nas website, za registraciju posjetite link iznad! :thinking:", true)
-                            .addField("\nMoguci problem:", "Provjerite jeste li registrovali ispravan faceit profil sa ispravnim discord profilom! :v:", true);
+                    authmsg2.setAuthor("REGISTRATION SITE - CLICK HERE", "https://www.balkan-csgo.com/");
+                    if (discordLang.equals("ba")) {
+                        authmsg2.addField("Status registracije:", "Niste registrovani na nas website, za registraciju posjetite link iznad! :thinking:", true)
+                                .addField("\nMoguci problem:", "Provjerite jeste li registrovali ispravan faceit profil sa ispravnim discord profilom! :v:", true);
+                    } else {
+                        authmsg2.addField("Registration status:", "You aren't registered on our website,to register click the link above! :thinking:", true)
+                                .addField("\nPossible problem:", "Check if you connected right discord profile with right faceit account! :v:", true);
+                    }
                     chapriv.sendMessage(authmsg2.build()).queue();
                     guild.moveVoiceMember(usr, guild.getVoiceChannelById(movetocha)).complete();
                 }
@@ -273,31 +296,50 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
                     databaseAdapter.discordId = event.getAuthor().getId();
 
                     try {
-                        new databaseAdapter().authSQL();
+                        new databaseLang().authSQL();
+                        new databaseLang().readLang(event.getAuthor().getId(), Objects.requireNonNull(event.getMember()).getEffectiveName());
                     } catch (SQLException throwables) {
                         throwables.printStackTrace();
                     }
+
                     System.out.println(printTimeStamp() + "[AUTH] " + event.getAuthor() + " have discord id set: " + databaseAdapter.discordRes);
+                    String discordLang = databaseLang.userLang;
+
                     EmbedBuilder botmsg = new EmbedBuilder();
                     botmsg.setColor(0x08d5da);
                     if (databaseAdapter.discordRes.equals("no")) {
                         botmsg.setAuthor("REGISTRATION SITE - CLICK HERE", "https://www.balkan-csgo.com/");
-                        botmsg.addField("Status registracije:", "Niste registrovani na nas website, za registraciju posjetite link iznad! :thinking:", true)
-                                .addField("\nMoguci problem:", "Provjerite jeste li povezali Vas discrod profil na nasem sajtu! :v:", true);
+                        if (discordLang.equals("ba")) {
+                            botmsg.addField("Status registracije:", "Niste registrovani na nas website, za registraciju posjetite link iznad! :thinking:", true)
+                                    .addField("\nMoguci problem:", "Provjerite jeste li povezali Vas discrod profil na nasem sajtu! :v:", true);
+                        } else {
+                            botmsg.addField("Registration status:", "You aren't registered on our website,to register click the link above! :thinking:", true)
+                                    .addField("\nPossible problem:", "Check if you connect your discord profile on our website! :v:", true);
+                        }
                         event.getChannel().sendMessage(botmsg.build()).queue();
                     } else {
                         if (databaseAdapter.discordRes.equals("yes") && databaseAdapter.faceitId == null) {
                             botmsg.setAuthor("REGISTRATION SITE - CLICK HERE", "https://www.balkan-csgo.com/");
-                            botmsg.addField("Status registracije:", "Nepotpuna registracija,provjerite jeste li registrovali ispravan faceit profil sa ispravnim discord profilom! :thinking:", true);
+                            if (discordLang.equals("ba"))
+                                botmsg.addField("Status registracije:", "Nepotpuna registracija,provjerite jeste li registrovali ispravan faceit profil sa ispravnim discord profilom! :thinking:", true);
+                            else
+                                botmsg.addField("Registration status:", "Incomplete registration,check if you connected right discord profile with right faceit account! :thinking:", true);
                             event.getChannel().sendMessage(botmsg.build()).queue();
                         } else {
                             Role role = guild.getRoleById(hubrole);
                             assert role != null;
                             botmsg.setAuthor("BALKAN CSGO LEAGUE", "https://www.balkan-csgo.com/");
-                            botmsg.addField("Status registracije:", "Autentifikacija uspjesna! :white_check_mark:", false);
+                            if (discordLang.equals("ba"))
+                                botmsg.addField("Status registracije:", "Autentifikacija uspjesna! :white_check_mark:", false);
+                            else
+                                botmsg.addField("Registration status:", "Authentication successful! :white_check_mark:", false);
 
                             if (!Objects.requireNonNull(event.getMember()).getRoles().contains(role)) {
-                                botmsg.addField("", "Kao nagradu,dodjeljujemo Vam nasu hub permisiju! :clap:\n", false);
+                                if (discordLang.equals("ba"))
+                                    botmsg.addField("", "Kao nagradu,dodjeljujemo Vam nasu hub permisiju! :clap:\n", false);
+                                else
+                                    botmsg.addField("", "As a reward,we are giving you our hub permission! :clap:\n", false);
+
                                 event.getChannel().sendMessage(botmsg.build()).queue();
                                 guild.addRoleToMember(event.getMember(), role).queue();
                             } else
