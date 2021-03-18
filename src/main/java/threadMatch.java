@@ -9,7 +9,7 @@ import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class threadMatch extends faceitMessageListener implements Runnable {
-    private Boolean bool = true;
+
     private static String channelOne;
     private static String channelTwo;
     private static Vector<String> team_One = new Vector<>();
@@ -31,26 +31,26 @@ public class threadMatch extends faceitMessageListener implements Runnable {
 
         Guild guildThread = guild;
         VoiceChannel conn = guildThread.getVoiceChannelById(moveme);
+        AtomicBoolean createCha = new AtomicBoolean(true);
+        AtomicBoolean deleteCha = new AtomicBoolean(true);
+
         final String[] channelid = new String[2];
         System.out.println(printTimeStamp() + "[MATCH THREAD] Starting thread with name: " + Thread.currentThread().getName());
 
-        Objects.requireNonNull(guildThread.getCategoryById(hubcategory)).createVoiceChannel(channelOne)
-                .queue(channel -> {
-                    channelid[0] = channel.getId();
-                    System.out.println(printTimeStamp() + "[MATCH THREAD IDS] Channel one created - id: " + channelid[0]);
-                });
-        Objects.requireNonNull(guildThread.getCategoryById(hubcategory)).createVoiceChannel(channelTwo)
-                .queue(channel -> {
-                    channelid[1] = channel.getId();
-                    System.out.println(printTimeStamp() + "[MATCH THREAD IDS] Channel two created - id: " + channelid[1]);
-                    bool = false;
-                });
-        try {
-            while (bool)
-                Thread.sleep(100);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        while (createCha.get()) {
+            Objects.requireNonNull(guildThread.getCategoryById(hubcategory)).createVoiceChannel(channelOne)
+                    .queue(channel -> {
+                        channelid[0] = channel.getId();
+                        System.out.println(printTimeStamp() + "[MATCH THREAD IDS] Channel one created - id: " + channelid[0]);
+                    });
+            Objects.requireNonNull(guildThread.getCategoryById(hubcategory)).createVoiceChannel(channelTwo)
+                    .queue(channel -> {
+                        channelid[1] = channel.getId();
+                        System.out.println(printTimeStamp() + "[MATCH THREAD IDS] Channel two created - id: " + channelid[1]);
+                        createCha.set(false);
+                    });
         }
+
         final String[] teamOne = team_One.toArray(new String[0]);
         final String[] teamTwo = team_Two.toArray(new String[0]);
 
@@ -114,11 +114,15 @@ public class threadMatch extends faceitMessageListener implements Runnable {
                 }
                 running.set(false);
                 Thread.currentThread().interrupt();
+                //TODO: intterupt message thread
             }
         }
-        Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[0])).delete().reason("Match ended.").complete();
-        System.out.println(printTimeStamp() + "[MATCH THREAD] Deleting channel one: " + Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[0])).getName());
-        Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[1])).delete().reason("Match ended.").complete();
-        System.out.println(printTimeStamp() + "[MATCH THREAD] Deleting channel two: " + Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[1])).getName());
+
+        while (deleteCha.get()) {
+            System.out.println(printTimeStamp() + "[MATCH THREAD] Deleting channel one: " + Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[0])).getName());
+            Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[0])).delete().reason("Match ended.").queue();
+            System.out.println(printTimeStamp() + "[MATCH THREAD] Deleting channel two: " + Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[1])).getName());
+            Objects.requireNonNull(guildThread.getVoiceChannelById(channelid[1])).delete().reason("Match ended.").queue(channel -> deleteCha.set(false));
+        }
     }
 }

@@ -195,10 +195,10 @@ public class faceitMessageListener extends ListenerAdapter implements EventListe
                     }
                     if (!started.contains(cmessage[1])) {
 
+                        //TODO: Add match scores thread to start
                         input = cmessage[1];
 
-                        faceitTeamsAdapter fta = new faceitTeamsAdapter(input);
-                        fta.getData();
+                        new faceitTeamsAdapter(input).getData("match");
 
                         Vector<String> team1 = faceitTeamsAdapter.teamOne;
                         Vector<String> team2 = faceitTeamsAdapter.teamTwo;

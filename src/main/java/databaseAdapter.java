@@ -1,7 +1,6 @@
 import com.mysql.jdbc.jdbc2.optional.MysqlConnectionPoolDataSource;
 
 import java.sql.*;
-import java.util.Objects;
 
 public class databaseAdapter {
     public static String DB_NAME;
